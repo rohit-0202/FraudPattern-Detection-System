@@ -1,11 +1,14 @@
- package com.bank.frauddetection.service.impl;
+package com.bank.frauddetection.service.impl;
 
 import com.bank.frauddetection.dto.TransactionRequestDTO;
 import com.bank.frauddetection.dto.TransactionResponseDTO;
 import com.bank.frauddetection.entity.Account;
 import com.bank.frauddetection.entity.Transaction;
+import com.bank.frauddetection.entity.User;
 import com.bank.frauddetection.repository.AccountRepository;
 import com.bank.frauddetection.repository.TransactionRepository;
+import com.bank.frauddetection.repository.UserRepository;
+import com.bank.frauddetection.service.FraudDetectionService;
 import com.bank.frauddetection.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,8 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final UserRepository userRepository;
+    private final FraudDetectionService fraudDetectionService;
 
     @Override
     public TransactionResponseDTO transferMoney(TransactionRequestDTO request) {
@@ -49,6 +54,14 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setStatus("SUCCESS");
 
         transactionRepository.save(transaction);
+
+        // ================================
+        // STEP 7 – FRAUD DETECTION TRIGGER
+        // ================================
+        User user = userRepository.findById(fromAccount.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        fraudDetectionService.detectFraud(user);
 
         return new TransactionResponseDTO("SUCCESS", "Transaction completed");
     }
