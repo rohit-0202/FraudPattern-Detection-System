@@ -63,13 +63,27 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userOpt.get();
 
+        // WRONG PASSWORD
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+
+            user.setRiskScore(user.getRiskScore() + 10);
+
+            if (user.getRiskScore() >= 50) {
+                user.setStatus("BLOCKED");
+            }
+
+            userRepository.save(user);
             return new LoginResponseDTO("Invalid username or password", null, null);
         }
 
+        // BLOCKED USER
         if ("BLOCKED".equals(user.getStatus())) {
             return new LoginResponseDTO("User is blocked", null, null);
         }
+
+        // ✅ SUCCESSFUL LOGIN → RESET RISK SCORE
+        user.setRiskScore(0);
+        userRepository.save(user);
 
         return new LoginResponseDTO(
                 "Login successful",
@@ -86,13 +100,11 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String otp = OtpUtil.generateOtp();
-
         user.setOtp(otp);
         user.setOtpExpiry(LocalDateTime.now().plusMinutes(5));
 
         userRepository.save(user);
 
-        // Demo purpose only
         return "OTP generated: " + otp;
     }
 
@@ -107,8 +119,7 @@ public class AuthServiceImpl implements AuthService {
             return "Invalid OTP";
         }
 
-        if (user.getOtpExpiry() == null ||
-                user.getOtpExpiry().isBefore(LocalDateTime.now())) {
+        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
             return "OTP expired";
         }
 

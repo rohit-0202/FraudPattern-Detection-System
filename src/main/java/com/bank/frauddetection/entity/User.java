@@ -23,13 +23,10 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    private String role;        // USER / ADMIN
-    private String status;      // ACTIVE / BLOCKED
+    private String role;    // USER / ADMIN
+    private String status;  // ACTIVE / BLOCKED
     private int riskScore;
 
-    // ===== FORGOT PASSWORD =====
-    @Column(length = 6)
     private String otp;
-
     private LocalDateTime otpExpiry;
 }

@@ -2,10 +2,12 @@ package com.bank.frauddetection.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class FraudLog {
@@ -15,10 +17,7 @@ public class FraudLog {
     private Long id;
 
     private Long userId;
-
     private String reason;
-
     private int riskScore;
-
     private LocalDateTime createdAt;
 }

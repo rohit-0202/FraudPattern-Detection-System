@@ -1,35 +1,54 @@
 package com.bank.frauddetection.controller;
 
-import org.springframework.web.bind.annotation.*;
-
-import com.bank.frauddetection.audit.AuditLogger;
+import com.bank.frauddetection.entity.FraudLog;
+import com.bank.frauddetection.entity.Transaction;
 import com.bank.frauddetection.entity.User;
-import com.bank.frauddetection.repository.UserRepository;
+import com.bank.frauddetection.service.AdminService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin")
+@CrossOrigin(origins = "http://localhost:5173")
 @RequiredArgsConstructor
 public class AdminController {
 
-    private final UserRepository userRepository;
-    private final AuditLogger auditLogger;
+    private final AdminService adminService;
 
+    // ✅ GET ALL USERS
+    @GetMapping("/users")
+    public List<User> getAllUsers(@RequestParam Long adminId) {
+        return adminService.getAllUsers(adminId);
+    }
+
+    // ✅ BLOCK USER
     @PostMapping("/block/{userId}")
-    public String blockUser(@PathVariable Long userId) {
+    public String blockUser(
+            @RequestParam Long adminId,
+            @PathVariable Long userId) {
+        return adminService.blockUser(adminId, userId);
+    }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    // ✅ UNBLOCK USER
+    @PostMapping("/unblock/{userId}")
+    public String unblockUser(
+            @RequestParam Long adminId,
+            @PathVariable Long userId) {
+        return adminService.unblockUser(adminId, userId);
+    }
 
-        user.setStatus("BLOCKED");
-        userRepository.save(user);
+    // ✅ VIEW ALL TRANSACTIONS
+    @GetMapping("/transactions")
+    public List<Transaction> getAllTransactions(@RequestParam Long adminId) {
+        return adminService.getAllTransactions(adminId);
+    }
 
-        auditLogger.log(
-                "Blocked user with ID: " + userId,
-                "ADMIN"
-        );
-
-        return "User blocked successfully";
+    // ✅ VIEW FRAUD LOGS
+    @GetMapping("/fraud-logs")
+    public List<FraudLog> getFraudLogs(@RequestParam Long adminId) {
+        return adminService.getFraudLogs(adminId);
     }
 }

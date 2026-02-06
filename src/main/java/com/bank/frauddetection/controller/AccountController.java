@@ -1,6 +1,7 @@
 package com.bank.frauddetection.controller;
 
 import com.bank.frauddetection.service.AccountService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,5 +16,12 @@ public class AccountController {
     @GetMapping("/balance/{userId}")
     public double getBalance(@PathVariable Long userId) {
         return accountService.getBalance(userId);
+    }
+
+    @PostMapping("/deposit")
+    public String deposit(
+            @RequestParam Long userId,
+            @RequestParam double amount) {
+        return accountService.deposit(userId, amount);
     }
 }

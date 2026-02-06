@@ -23,7 +23,6 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public TransactionResponseDTO transferMoney(TransactionRequestDTO request) {
 
-        // Fetch sender & receiver accounts
         Account sender = accountRepository.findByUserId(request.getFromUserId())
                 .orElse(null);
 
@@ -39,7 +38,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         if (request.getAmount() <= 0) {
             return new TransactionResponseDTO(
-                    "Invalid transfer amount",
+                    "Invalid amount",
                     "FAILED"
             );
         }
@@ -58,7 +57,7 @@ public class TransactionServiceImpl implements TransactionService {
         accountRepository.save(sender);
         accountRepository.save(receiver);
 
-        // Save transaction record
+        // Save transaction
         Transaction tx = new Transaction();
         tx.setFromUserId(request.getFromUserId());
         tx.setToUserId(request.getToUserId());
