@@ -44,7 +44,7 @@ public class AuthServiceImpl implements AuthService {
         Account account = new Account();
         account.setUserId(savedUser.getId());
         account.setBalance(0);
-        account.setDailyLimit(10000);
+        account.setDailyLimit(100000);
 
         accountRepository.save(account);
 

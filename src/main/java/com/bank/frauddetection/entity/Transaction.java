@@ -7,8 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "transactions")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Transaction {
@@ -19,7 +18,12 @@ public class Transaction {
 
     private Long fromUserId;
     private Long toUserId;
+
     private double amount;
-    private String type; // DEPOSIT / TRANSFER
+
+    private String type;   // TRANSFER / DEPOSIT
+
+    private String status; // SUCCESS / FAILED
+
     private LocalDateTime timestamp;
 }
