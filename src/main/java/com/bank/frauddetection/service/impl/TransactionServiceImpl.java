@@ -8,6 +8,7 @@ import com.bank.frauddetection.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,7 +31,10 @@ public class TransactionServiceImpl implements TransactionService {
 
         // ❌ Invalid amount
         if (request.getAmount() <= 0) {
-            return new TransactionResponseDTO("Transfer amount must be greater than 0", "FAILED");
+            return new TransactionResponseDTO(
+                    "Transfer amount must be greater than 0",
+                    "FAILED"
+            );
         }
 
         Account sender = accountRepository.findByUserId(request.getFromUserId())
@@ -48,10 +52,24 @@ public class TransactionServiceImpl implements TransactionService {
             return new TransactionResponseDTO("Transfer amount exceeds balance", "FAILED");
         }
 
-        // ❌ Exceeds daily limit
-        if (request.getAmount() > sender.getDailyLimit()) {
-            return new TransactionResponseDTO("Transfer amount exceeds daily limit", "FAILED");
+        // ================= DAILY LIMIT (CUMULATIVE) =================
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDateTime.now();
+
+        double transferredToday =
+                transactionRepository.sumTransferredToday(
+                        request.getFromUserId(),
+                        startOfDay,
+                        endOfDay
+                );
+
+        if (transferredToday + request.getAmount() > sender.getDailyLimit()) {
+            return new TransactionResponseDTO(
+                    "Daily transfer limit exceeded",
+                    "FAILED"
+            );
         }
+        // ============================================================
 
         User user = userRepository.findById(request.getFromUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -59,16 +77,25 @@ public class TransactionServiceImpl implements TransactionService {
         // 🚨 High value fraud check
         if (request.getAmount() > HIGH_VALUE_LIMIT) {
             user.setRiskScore(user.getRiskScore() + 30);
+
             fraudLogRepository.save(
-                new FraudLog(null, user.getId(),
-                    "High value transaction", user.getRiskScore(), LocalDateTime.now())
+                    new FraudLog(
+                            null,
+                            user.getId(),
+                            "High value transaction",
+                            user.getRiskScore(),
+                            LocalDateTime.now()
+                    )
             );
         }
 
         if (user.getRiskScore() >= 50) {
             user.setStatus("BLOCKED");
             userRepository.save(user);
-            return new TransactionResponseDTO("User blocked due to fraud", "FAILED");
+            return new TransactionResponseDTO(
+                    "User blocked due to fraud",
+                    "FAILED"
+            );
         }
 
         userRepository.save(user);
@@ -92,7 +119,6 @@ public class TransactionServiceImpl implements TransactionService {
 
         return new TransactionResponseDTO("Transfer successful", "SUCCESS");
     }
-
 
     // ===============================
     // GET USER TRANSACTIONS

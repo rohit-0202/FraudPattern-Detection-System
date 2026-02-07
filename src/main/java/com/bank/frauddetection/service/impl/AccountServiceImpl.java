@@ -37,4 +37,11 @@ public class AccountServiceImpl implements AccountService {
 
         return "Deposit successful";
     }
+    
+    @Override
+    public Account getAccount(Long userId) {
+        return accountRepository.findByUserId(userId)
+            .orElseThrow(() -> new RuntimeException("Account not found"));
+    }
+
 }

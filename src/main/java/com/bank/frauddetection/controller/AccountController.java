@@ -1,9 +1,17 @@
 package com.bank.frauddetection.controller;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.bank.frauddetection.entity.Account;
 import com.bank.frauddetection.service.AccountService;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/account")
@@ -24,4 +32,10 @@ public class AccountController {
             @RequestParam double amount) {
         return accountService.deposit(userId, amount);
     }
+    
+    @GetMapping("/details/{userId}")
+    public Account getAccount(@PathVariable Long userId) {
+        return accountService.getAccount(userId);
+    }
+
 }
