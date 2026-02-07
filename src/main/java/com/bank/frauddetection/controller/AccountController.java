@@ -17,7 +17,7 @@ public class AccountController {
     public double getBalance(@PathVariable Long userId) {
         return accountService.getBalance(userId);
     }
-
+  
     @PostMapping("/deposit")
     public String deposit(
             @RequestParam Long userId,
