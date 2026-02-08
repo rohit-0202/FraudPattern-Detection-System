@@ -22,6 +22,8 @@ public class TransactionServiceImpl implements TransactionService {
     private final FraudLogRepository fraudLogRepository;
 
     private static final double HIGH_VALUE_LIMIT = 50000;
+    private static final int RAPID_TX_THRESHOLD = 3; // 3 transfers
+    private static final int RAPID_TX_WINDOW_MINUTES = 5;
 
     // ===============================
     // TRANSFER MONEY
@@ -74,6 +76,31 @@ public class TransactionServiceImpl implements TransactionService {
         User user = userRepository.findById(request.getFromUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // ================= RAPID TRANSACTION FREQUENCY =================
+        LocalDateTime fiveMinutesAgo =
+                LocalDateTime.now().minusMinutes(RAPID_TX_WINDOW_MINUTES);
+
+        long recentTransfers =
+                transactionRepository.countRecentTransfers(
+                        request.getFromUserId(),
+                        fiveMinutesAgo
+                );
+
+        if (recentTransfers >= RAPID_TX_THRESHOLD) {
+            user.setRiskScore(user.getRiskScore() + 20);
+
+            fraudLogRepository.save(
+                    new FraudLog(
+                            null,
+                            user.getId(),
+                            "Rapid transaction frequency detected (3 transfers in 5 minutes)",
+                            user.getRiskScore(),
+                            LocalDateTime.now()
+                    )
+            );
+        }
+        // ===============================================================
+
         // 🚨 High value fraud check
         if (request.getAmount() > HIGH_VALUE_LIMIT) {
             user.setRiskScore(user.getRiskScore() + 30);
@@ -89,9 +116,11 @@ public class TransactionServiceImpl implements TransactionService {
             );
         }
 
+        // ❌ Block user if risk too high
         if (user.getRiskScore() >= 50) {
             user.setStatus("BLOCKED");
             userRepository.save(user);
+
             return new TransactionResponseDTO(
                     "User blocked due to fraud",
                     "FAILED"

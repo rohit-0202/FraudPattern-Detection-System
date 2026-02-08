@@ -13,7 +13,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByFromUserIdOrToUserId(Long fromUserId, Long toUserId);
 
-    // ✅ SUM of today's transferred amount (cumulative daily limit)
+    // ================= DAILY LIMIT (CUMULATIVE) =================
     @Query("""
         SELECT COALESCE(SUM(t.amount), 0)
         FROM Transaction t
@@ -25,5 +25,18 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("userId") Long userId,
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
+    );
+
+    // ================= RAPID TRANSACTION FREQUENCY =================
+    @Query("""
+        SELECT COUNT(t)
+        FROM Transaction t
+        WHERE t.fromUserId = :userId
+          AND t.type = 'TRANSFER'
+          AND t.timestamp >= :since
+    """)
+    long countRecentTransfers(
+            @Param("userId") Long userId,
+            @Param("since") LocalDateTime since
     );
 }
