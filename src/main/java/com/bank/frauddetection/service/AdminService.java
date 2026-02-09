@@ -13,6 +13,8 @@ public interface AdminService {
     String blockUser(Long adminId, Long userId);
 
     String unblockUser(Long adminId, Long userId);
+    
+    String resetRiskScore(Long adminId, Long userId);
 
     List<Transaction> getAllTransactions(Long adminId);
 

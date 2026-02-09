@@ -1,16 +1,23 @@
 package com.bank.frauddetection.service.impl;
 
-import com.bank.frauddetection.dto.TransactionRequestDTO;
-import com.bank.frauddetection.dto.TransactionResponseDTO;
-import com.bank.frauddetection.entity.*;
-import com.bank.frauddetection.repository.*;
-import com.bank.frauddetection.service.TransactionService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.bank.frauddetection.dto.TransactionRequestDTO;
+import com.bank.frauddetection.dto.TransactionResponseDTO;
+import com.bank.frauddetection.entity.Account;
+import com.bank.frauddetection.entity.FraudLog;
+import com.bank.frauddetection.entity.Transaction;
+import com.bank.frauddetection.entity.User;
+import com.bank.frauddetection.repository.AccountRepository;
+import com.bank.frauddetection.repository.FraudLogRepository;
+import com.bank.frauddetection.repository.TransactionRepository;
+import com.bank.frauddetection.repository.UserRepository;
+import com.bank.frauddetection.service.TransactionService;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -54,16 +61,12 @@ public class TransactionServiceImpl implements TransactionService {
             return new TransactionResponseDTO("Transfer amount exceeds balance", "FAILED");
         }
 
-        // ================= DAILY LIMIT (CUMULATIVE) =================
-        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        LocalDateTime endOfDay = LocalDateTime.now();
-
+     // ================= DAILY LIMIT (CUMULATIVE) =================
         double transferredToday =
                 transactionRepository.sumTransferredToday(
-                        request.getFromUserId(),
-                        startOfDay,
-                        endOfDay
+                        request.getFromUserId()
                 );
+
 
         if (transferredToday + request.getAmount() > sender.getDailyLimit()) {
             return new TransactionResponseDTO(
@@ -102,7 +105,7 @@ public class TransactionServiceImpl implements TransactionService {
         // ===============================================================
 
         // 🚨 High value fraud check
-        if (request.getAmount() > HIGH_VALUE_LIMIT) {
+        if (request.getAmount() >= HIGH_VALUE_LIMIT) {
             user.setRiskScore(user.getRiskScore() + 30);
 
             fraudLogRepository.save(

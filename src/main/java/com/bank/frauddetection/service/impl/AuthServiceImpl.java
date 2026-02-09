@@ -61,12 +61,12 @@ public class AuthServiceImpl implements AuthService {
         Optional<User> userOpt = userRepository.findByUsername(request.getUsername());
 
         if (userOpt.isEmpty()) {
-            return new LoginResponseDTO("Invalid username or password", null, null,null);
+            return new LoginResponseDTO("Invalid username or password", null, null, null);
         }
 
         User user = userOpt.get();
 
-        // WRONG PASSWORD
+        // ❌ WRONG PASSWORD
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
 
             user.setRiskScore(user.getRiskScore() + 10);
@@ -76,25 +76,22 @@ public class AuthServiceImpl implements AuthService {
             }
 
             userRepository.save(user);
-            return new LoginResponseDTO("Invalid username or password", null, null,null);
+            return new LoginResponseDTO("Invalid username or password", null, null, null);
         }
 
-        // BLOCKED USER
+        // ❌ BLOCKED USER
         if ("BLOCKED".equals(user.getStatus())) {
-            return new LoginResponseDTO("User is blocked", null, null,null);
+            return new LoginResponseDTO("User is blocked", null, null, null);
         }
 
-        // ✅ SUCCESSFUL LOGIN → RESET RISK SCORE
-        user.setRiskScore(0);
-        userRepository.save(user);
-
+        // ✅ SUCCESSFUL LOGIN
+        // 🚫 DO NOT RESET RISK SCORE HERE
         return new LoginResponseDTO(
                 "Login successful",
                 user.getId(),
                 user.getRole(),
                 user.getUsername()
         );
-
     }
 
     // ================= FORGOT PASSWORD =================

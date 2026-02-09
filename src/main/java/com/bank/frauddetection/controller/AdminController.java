@@ -51,4 +51,14 @@ public class AdminController {
     public List<FraudLog> getFraudLogs(@RequestParam Long adminId) {
         return adminService.getFraudLogs(adminId);
     }
+    
+ // ✅ RESET USER RISK SCORE (ADMIN ONLY)
+    @PostMapping("/reset-risk/{userId}")
+    public String resetRiskScore(
+            @RequestParam Long adminId,
+            @PathVariable Long userId) {
+
+        return adminService.resetRiskScore(adminId, userId);
+    }
+
 }

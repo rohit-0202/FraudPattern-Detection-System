@@ -15,17 +15,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     // ================= DAILY LIMIT (CUMULATIVE) =================
     @Query("""
-        SELECT COALESCE(SUM(t.amount), 0)
-        FROM Transaction t
-        WHERE t.fromUserId = :userId
-          AND t.type = 'TRANSFER'
-          AND t.timestamp BETWEEN :start AND :end
-    """)
-    double sumTransferredToday(
-            @Param("userId") Long userId,
-            @Param("start") LocalDateTime start,
-            @Param("end") LocalDateTime end
-    );
+    	    SELECT COALESCE(SUM(t.amount), 0)
+    	    FROM Transaction t
+    	    WHERE t.fromUserId = :userId
+    	      AND t.type = 'TRANSFER'
+    	      AND DATE(t.timestamp) = CURRENT_DATE
+    	""")
+    	double sumTransferredToday(@Param("userId") Long userId);
+
 
     // ================= RAPID TRANSACTION FREQUENCY =================
     @Query("""

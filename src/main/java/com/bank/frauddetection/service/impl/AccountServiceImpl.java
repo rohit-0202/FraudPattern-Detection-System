@@ -13,10 +13,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
+
+    private static final ZoneId APP_ZONE = ZoneId.of("Asia/Kolkata");
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
@@ -65,7 +68,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     // ===============================
-    // ACCOUNT SUMMARY (NEW)
+    // ACCOUNT SUMMARY (DAILY RESET SAFE)
     // ===============================
     @Override
     public AccountSummaryDTO getAccountSummary(Long userId) {
@@ -73,15 +76,13 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
 
-        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = LocalDate.now(APP_ZONE);
+        LocalDateTime startOfDay = today.atStartOfDay(APP_ZONE).toLocalDateTime();
+        LocalDateTime now = LocalDateTime.now(APP_ZONE);
 
         double transferredToday =
-                transactionRepository.sumTransferredToday(
-                        userId,
-                        startOfDay,
-                        now
-                );
+        	    transactionRepository.sumTransferredToday(userId);
+
 
         double remainingDailyLimit =
                 Math.max(0, account.getDailyLimit() - transferredToday);

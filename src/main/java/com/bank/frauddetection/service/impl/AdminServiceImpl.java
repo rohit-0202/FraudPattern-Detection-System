@@ -84,12 +84,33 @@ public class AdminServiceImpl implements AdminService {
 
         user.setStatus("ACTIVE");
 
-        // ✅ RESET RISK SCORE ON ADMIN UNBLOCK
-        user.setRiskScore(0);
-
+        // ❌ DO NOT reset risk score here
         userRepository.save(user);
 
         return "User unblocked successfully";
+    }
+
+    // ================= RESET RISK SCORE =================
+    @Override
+    public String resetRiskScore(Long adminId, Long userId) {
+        validateAdmin(adminId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found"
+                ));
+
+        user.setRiskScore(0);
+
+        // Optional but sensible: ensure user is usable again
+        if ("BLOCKED".equals(user.getStatus())) {
+            user.setStatus("ACTIVE");
+        }
+
+        userRepository.save(user);
+
+        return "Risk score reset successfully";
     }
 
     // ================= VIEW TRANSACTIONS =================
